@@ -9,6 +9,8 @@ import matplotlib.animation
 from PIL import Image
 from io import BytesIO
 
+from typing import List, Dict, Tuple
+
 
 def parse_mtlf_to_ltlf(ltlf_formula, connector='&', add_eventually=True):
     while '$' in ltlf_formula:
@@ -39,6 +41,14 @@ def parse_mtlf_to_ltlf(ltlf_formula, connector='&', add_eventually=True):
         ltlf_formula = ltlf_formula[:index] + \
             replacement + ltlf_formula[index+end+1:]
     return ltlf_formula
+
+
+def ltlf_to_python(ltl_predicate):
+    ltl_predicate = ltl_predicate.replace("&", " and ")  # replace and
+    ltl_predicate = ltl_predicate.replace("|", " or ")  # replace or
+    ltl_predicate = ltl_predicate.replace("~", " not ")  # replace not
+    ltl_predicate = ltl_predicate.replace("true", "True")  # Python True casing
+    return ltl_predicate
 
 
 class LTLfDFA:
@@ -76,10 +86,14 @@ class LTLfDFA:
                 # all labels are wrapped in double quotes
                 a['label'] = a['label'][1:-1]
                 a['orig_label'] = a['label']
-                a['label'] = a['label'].replace("&", " and ")  # replace and
-                a['label'] = a['label'].replace("|", " or ")  # replace or
-                a['label'] = a['label'].replace("~", " not ")  # replace not
-                a['label'] = a['label'].replace("true", "True")  # Python True casing
+                a['label'] = ltlf_to_python(a['label'])
+        # build list of trap states
+        self._trap_states = []
+        for node in self._dfa.nodes:
+            # if all edges leading out of this node go to this node, it is a trap state
+            # this should always be encoded as
+            if all([src == dst for src, dst in self._dfa.out_edges(node)]):
+                self._trap_states.append(node)
 
     def step(self, data, return_state=False):
         self._current_state = self._compute_next_state(
@@ -99,8 +113,10 @@ class LTLfDFA:
                 f"Unable to find state transition from {u} with {data_dict}, aborting.")
         return valid_states[0]
 
-    def from_init(self, data, return_state=False):
+    def from_init(self, data: Dict[str, List[Tuple[int, bool]]], return_state=False):
         current_state = self._init_state
+        if data is None:
+            return [(self._dfa.nodes[self._init_state]['accepting'], self._init_state)]
         data_key = next(iter(data))
         ret_val = []
         time_steps = len(data[data_key])
@@ -113,6 +129,10 @@ class LTLfDFA:
             else:
                 ret_val.append(self._dfa.nodes[current_state]['accepting'])
         return ret_val
+
+    def set_state(self, state):
+        assert state in self._dfa.nodes, f"Given state not in DFA"
+        self._current_state = state
 
     def save_image(self, file_name, cur_node=None, color=False):
         if file_name.endswith('svg'):
@@ -156,6 +176,9 @@ class LTLfDFA:
             sg_img = nx.nx_pydot.to_pydot(graph_copy).create_png()
             return Image.open(BytesIO(sg_img))
 
+    def is_trap_state(self, state):
+        return state in self._trap_states
+
     def animate(self, steps, mp4_file, fps=20):
         fig, ax = plt.subplots()
         ax.axis('off')
@@ -172,3 +195,6 @@ class LTLfDFA:
 
         writer = matplotlib.animation.FFMpegFileWriter(fps=fps, codec="mpeg4")
         ani.save(mp4_file, writer=writer)
+
+    def reset(self):
+        self._current_state = self._init_state

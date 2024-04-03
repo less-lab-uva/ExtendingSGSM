@@ -1,4 +1,6 @@
-from LTLfDFA import LTLfDFA
+from typing import Dict, List, Union
+
+from LTLfDFA import LTLfDFA, ltlf_to_python
 from functools import partial
 
 from PIL import Image
@@ -7,7 +9,14 @@ import networkx as nx
 
 
 class Property:
-    def __init__(self, property_name, property_string, predicates):
+    def __init__(self, property_name, property_string, predicates, reset_string=None,
+                 reset_init_trace: Dict[str, List[bool]] = None):
+        self.resetable = False
+        if reset_string is None:
+            # if no reset string is specified, then the DFA can't leave the trap state
+            reset_string = "False"
+        else:
+            self.resetable = True
         self.name = property_name
         self.ltldfa = LTLfDFA(property_string)
         self.data = {}
@@ -15,6 +24,20 @@ class Property:
         for a, b in predicates:
             self.data[a] = []
             self.predicates[a] = b
+        self.reset_string = ltlf_to_python(reset_string)
+        if reset_init_trace is not None:
+            self.reset_init_trace = {key: [(i, val) for i, val in enumerate(bool_list)]
+                                     for key, bool_list in reset_init_trace.items()}
+            # validate that the reset_init_trace can be run from the init state
+            try:
+                self.ltldfa.from_init(self.reset_init_trace)
+            except NameError:
+                raise AttributeError("reset_init_trace not valid over the DFA produced by the provided property_string")
+        else:
+            self.reset_init_trace = None
+        self.violations = []
+        self.in_violation = False
+        self.time = 0
 
     def update_data(self, sg, save_usage_information=False):
         sg.graph[f'save_usage_information_{self.name}'] = save_usage_information
@@ -29,7 +52,8 @@ class Property:
     def save_relevant_subgraph(self, sg, file_name):
         svg = file_name is not None and file_name.endswith('svg')
         if not sg.graph[f'save_usage_information_{self.name}']:
-            raise ValueError("Cannot save relevant subgraph without save_usage_information set and calling update_data before this.")
+            raise ValueError(
+                "Cannot save relevant subgraph without save_usage_information set and calling update_data before this.")
         all_nodes = set()
         for data_dict in sg.graph[f'usage_information_{self.name}']:
             func_name = data_dict['func']  # TODO: filter only by those used in comparison expressions?
@@ -55,10 +79,28 @@ class Property:
                 img.save(file_name)
 
     def check_from_init(self):
+        """
+        Checks if the data given leads to at least one violation. Does not handle multiple violations
+        """
         return self.ltldfa.from_init(self.data, return_state=False)
 
     def check_step(self, return_state=False):
+        """
+        Updates the DFA based on the data. Handles multiple violations according to the reset criteria provided
+        """
+        self.time += 1
         acc, state = self.ltldfa.step(self.get_last_predicates(), return_state=True)
+        if self.ltldfa.is_trap_state(state):
+            if not self.in_violation:
+                self.in_violation = True
+                self.violations.append([self.time, -1])
+            if eval(self.reset_string, self.get_last_predicates()):
+                self.in_violation = False
+                self.violations[-1][-1] = self.time
+                dfa_trace = self.ltldfa.from_init(self.reset_init_trace, return_state=True)
+                # set the DFA state to the state it ended the reset trace in
+                state = dfa_trace[-1][-1]
+                self.ltldfa.set_state(state)
         if return_state:
             return acc, state
         return acc
@@ -85,9 +127,9 @@ class Property:
                 if type(param) == set:
                     data.update(param)
             sg.graph[f'usage_information_{self.name}'].append({
-                    'func': func_chain,
-                    'data': data
-                })
+                'func': func_chain,
+                'data': data
+            })
         if predicate.func.__name__ in ['filterByAttr', 'relSet']:
             return predicate.func(*param_list, sg, **predicate.keywords)
         else:

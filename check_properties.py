@@ -46,7 +46,7 @@ def check_directory(dir_to_check, save_folder, threaded=False):
         sg = utils.load_sg(str(rsv_folder / sg_name))
         m.check(sg, save_usage_information=True)
         # m.save_all_relevant_subgraphs(sg, sg_name.replace('.pkl', ''))
-
+    m.save_final_output()
     end = time.time()
     print(f"{str(dir_to_check)} | Checked {len(sg_name_list)} SGs | Total time taken: {end - start:.2f} seconds | Average time per SG: {(end - start) / len(sg_name_list):.2f} seconds")
 
@@ -55,10 +55,11 @@ def main():
     parser = argparse.ArgumentParser(prog='Property checker')
     parser.add_argument('-f', '--folder_to_check', type=Path)
     parser.add_argument('-s', '--save_folder', type=Path, default='default/')
+    parser.add_argument('-t', '--threaded', action='store_true')
     args = parser.parse_args()
 
     dirs = [p for p in args.folder_to_check.iterdir()]
-    if len(dirs) > 1:
+    if args.threaded:
         results = []
         with Pool(len(dirs)) as p:
             for d in dirs:
@@ -67,7 +68,8 @@ def main():
             for r in results:
                 r.wait()
     else:
-        check_directory(args.system_under_test, dirs[0], args.save_folder, False)
+        for d in sorted(dirs):
+            check_directory(d, args.save_folder, False)
 
 
 if __name__ == "__main__":

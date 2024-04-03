@@ -23,7 +23,7 @@ RED_TRAFFIC_LIGHT_FOR_EGO = partial(P.filterByAttr, TRAFFIC_LIGHT_FOR_EGO,
                                     "light_state", "Red")
 STOP_SIGN_FOR_EGO = partial(P.intersection, partial(P.relSet, partial(
     P.filterByAttr, "G", "name", "stop_sign*"), "controlsTrafficOf"),
-    EGO_LANES)
+                            EGO_LANES)
 
 # Boolean predicates
 IS_IN_JUNCTION = partial(partial(P.gt, partial(P.size, EGO_JUNTIONS), 0))
@@ -47,6 +47,9 @@ EGO_IS_IN_OPPOSING_LANE = partial(P.gt, partial(
     P.size, partial(P.intersection, EGO_LANES, OPPOSING_LANES)), 0)
 phi1 = Property("Phi1", "G(~ego_is_in_opposing_lane)",
                 [("ego_is_in_opposing_lane", EGO_IS_IN_OPPOSING_LANE)])
+phi1_duration = Property("Phi1_duration", "G(~ego_is_in_opposing_lane)",
+                [("ego_is_in_opposing_lane", EGO_IS_IN_OPPOSING_LANE)],
+                         reset_string='~ego_is_in_opposing_lane')
 
 # Property 2
 
@@ -55,6 +58,10 @@ EGO_IS_OUT_OF_ROAD = partial(P.gt, partial(P.size, partial(
 phi2 = Property(
     "Phi2", "G(~ego_is_out_of_road)",
     [("ego_is_out_of_road", EGO_IS_OUT_OF_ROAD)])
+phi2_duration = Property(
+    "Phi2_duration", "G(~ego_is_out_of_road)",
+    [("ego_is_out_of_road", EGO_IS_OUT_OF_ROAD)],
+    reset_string='~ego_is_out_of_road')
 
 # Property 3
 
@@ -74,6 +81,13 @@ phi3 = Property(
     [("is_in_right_most_lane", IS_IN_RIGHT_MOST_LANE),
      ("is_in_junction", IS_IN_JUNCTION),
      ("is_not_steering_right", IS_NOT_STEERING_RIGHT)])
+phi3_duration = Property(
+    "Phi3_duration",
+    "G(is_in_right_most_lane & ~is_in_junction -> is_not_steering_right)",
+    [("is_in_right_most_lane", IS_IN_RIGHT_MOST_LANE),
+     ("is_in_junction", IS_IN_JUNCTION),
+     ("is_not_steering_right", IS_NOT_STEERING_RIGHT)],
+    reset_string='is_not_steering_right')
 
 # Property 4 - S=5
 
@@ -86,6 +100,11 @@ phi4_S_5 = Property(
     "Phi4_S_5", "G(are_entities_near_coll -> ~ego_is_faster_than_s)",
     [("are_entities_near_coll", ARE_ENTITIES_NEAR_COLL),
      ("ego_is_faster_than_s", EGO_IS_FASTER_THAN_S)])
+phi4_S_5_duration = Property(
+    "Phi4_S_5_duration", "G(are_entities_near_coll -> ~ego_is_faster_than_s)",
+    [("are_entities_near_coll", ARE_ENTITIES_NEAR_COLL),
+     ("ego_is_faster_than_s", EGO_IS_FASTER_THAN_S)],
+    reset_string='~ego_is_faster_than_s')
 
 # Property 4 - S=10
 
@@ -98,6 +117,11 @@ phi4_S_10 = Property(
     "Phi4_S_10", "G(are_entities_near_coll -> ~ego_is_faster_than_s)",
     [("are_entities_near_coll", ARE_ENTITIES_NEAR_COLL),
      ("ego_is_faster_than_s", EGO_IS_FASTER_THAN_S)])
+phi4_S_10_duration = Property(
+    "Phi4_S_10_duration", "G(are_entities_near_coll -> ~ego_is_faster_than_s)",
+    [("are_entities_near_coll", ARE_ENTITIES_NEAR_COLL),
+     ("ego_is_faster_than_s", EGO_IS_FASTER_THAN_S)],
+    reset_string='~ego_is_faster_than_s')
 
 # Property 4 - S=15
 
@@ -110,6 +134,11 @@ phi4_S_15 = Property(
     "Phi4_S_15", "G(are_entities_near_coll -> ~ego_is_faster_than_s)",
     [("are_entities_near_coll", ARE_ENTITIES_NEAR_COLL),
      ("ego_is_faster_than_s", EGO_IS_FASTER_THAN_S)])
+phi4_S_15_duration = Property(
+    "Phi4_S_15_duration", "G(are_entities_near_coll -> ~ego_is_faster_than_s)",
+    [("are_entities_near_coll", ARE_ENTITIES_NEAR_COLL),
+     ("ego_is_faster_than_s", EGO_IS_FASTER_THAN_S)],
+    reset_string='~ego_is_faster_than_s')
 
 # Property 5
 
@@ -129,6 +158,13 @@ phi5 = Property(
     [("are_entities_super_near", ARE_ENTITIES_SUPER_NEAR),
      ("are_entities_near_coll", ARE_ENTITIES_NEAR_COLL),
      ("is_throttle_not_positive", IS_THROTTLE_NOT_POSITIVE)])
+phi5_duration = Property(
+    "Phi5_duration",
+    "G(are_entities_super_near & ~are_entities_near_coll & X are_entities_near_coll -> X is_throttle_not_positive)",
+    [("are_entities_super_near", ARE_ENTITIES_SUPER_NEAR),
+     ("are_entities_near_coll", ARE_ENTITIES_NEAR_COLL),
+     ("is_throttle_not_positive", IS_THROTTLE_NOT_POSITIVE)],
+    reset_string="is_throttle_not_positive")
 
 # Property 6
 
@@ -143,6 +179,17 @@ phi6 = Property(
      ("are_stop_signs_for_ego", ARE_STOP_SIGNS_FOR_EGO),
      ("is_stopped", IS_STOPPED)])
 
+phi6_duration = Property(
+    "Phi6_duration",
+    # "G(~are_entities_within_7m & ~are_red_traffic_lights_for_ego & ~are_stop_signs_for_ego -> ~is_stopped)",
+    "G(~is_stopped & ~are_entities_within_7m & ~are_red_traffic_lights_for_ego & ~are_stop_signs_for_ego & X(~are_entities_within_7m & ~are_red_traffic_lights_for_ego & ~are_stop_signs_for_ego) -> X ~is_stopped)",
+    [("are_entities_within_7m", ARE_ENTITIES_WITHIN_7M),
+     ("are_red_traffic_lights_for_ego", ARE_RED_TRAFFIC_LIGHT_FOR_EGO),
+     ("are_stop_signs_for_ego", ARE_STOP_SIGNS_FOR_EGO),
+     ("is_stopped", IS_STOPPED)],
+    reset_string="~is_stopped")
+
+
 # Property 7 - T=5
 
 T = 10  # PARAMETER T at 2Hz
@@ -152,6 +199,12 @@ phi7_T_5 = Property(
     f"~ $[{T}][is_in_multiple_lanes & ~is_in_juntion]",
     [("is_in_multiple_lanes", IS_IN_MULTIPLE_LANES),
      ("is_in_juntion", IS_IN_JUNCTION)])
+phi7_T_5_duration = Property(
+    "Phi7_T_5_duration",
+    f"~ $[{T}][is_in_multiple_lanes & ~is_in_juntion]",
+    [("is_in_multiple_lanes", IS_IN_MULTIPLE_LANES),
+     ("is_in_juntion", IS_IN_JUNCTION)],
+    "~is_in_multiple_lanes | is_in_juntion")
 
 # Property 7 - T=10
 
@@ -162,6 +215,12 @@ phi7_T_10 = Property(
     f"~ $[{T}][is_in_multiple_lanes & ~is_in_juntion]",
     [("is_in_multiple_lanes", IS_IN_MULTIPLE_LANES),
      ("is_in_juntion", IS_IN_JUNCTION)])
+phi7_T_10_duration = Property(
+    "Phi7_T_10_duration",
+    f"~ $[{T}][is_in_multiple_lanes & ~is_in_juntion]",
+    [("is_in_multiple_lanes", IS_IN_MULTIPLE_LANES),
+     ("is_in_juntion", IS_IN_JUNCTION)],
+    "~is_in_multiple_lanes | is_in_juntion")
 
 # Property 7 - T=15
 
@@ -172,6 +231,12 @@ phi7_T_15 = Property(
     f"~ $[{T}][is_in_multiple_lanes & ~is_in_juntion]",
     [("is_in_multiple_lanes", IS_IN_MULTIPLE_LANES),
      ("is_in_juntion", IS_IN_JUNCTION)])
+phi7_T_15_duration = Property(
+    "Phi7_T_15_duration",
+    f"~ $[{T}][is_in_multiple_lanes & ~is_in_juntion]",
+    [("is_in_multiple_lanes", IS_IN_MULTIPLE_LANES),
+     ("is_in_juntion", IS_IN_JUNCTION)],
+    "~is_in_multiple_lanes | is_in_juntion")
 
 # Property 8 - T=5
 
@@ -184,6 +249,12 @@ phi8_T_5 = Property(
     f"~ $[{T}][is_only_in_junction]",
     [("is_only_in_junction", IS_ONLY_IN_JUNCTION)])
 
+phi8_T_5_duration = Property(
+    "Phi8_T_5_duration",
+    f"~ $[{T}][is_only_in_junction]",
+    [("is_only_in_junction", IS_ONLY_IN_JUNCTION)],
+    reset_string="~is_only_in_junction")
+
 # Property 8 - T=10
 
 T = 20  # PARAMETER T at 2Hz
@@ -194,6 +265,11 @@ phi8_T_10 = Property(
     "Phi8_T_10",
     f"~ $[{T}][is_only_in_junction]",
     [("is_only_in_junction", IS_ONLY_IN_JUNCTION)])
+phi8_T_10_duration = Property(
+    "Phi8_T_10_duration",
+    f"~ $[{T}][is_only_in_junction]",
+    [("is_only_in_junction", IS_ONLY_IN_JUNCTION)],
+    reset_string="~is_only_in_junction")
 
 # Property 8 - T=15
 
@@ -205,6 +281,11 @@ phi8_T_15 = Property(
     "Phi8_T_15",
     f"~ $[{T}][is_only_in_junction]",
     [("is_only_in_junction", IS_ONLY_IN_JUNCTION)])
+phi8_T_15_duration = Property(
+    "Phi8_T_15_duration",
+    f"~ $[{T}][is_only_in_junction]",
+    [("is_only_in_junction", IS_ONLY_IN_JUNCTION)],
+    reset_string="~is_only_in_junction")
 
 # Property 9
 
@@ -215,6 +296,26 @@ phi9 = Property(
     [("are_stop_signs_for_ego", ARE_STOP_SIGNS_FOR_EGO),
      ("is_stopped", IS_STOPPED)])
 
+phi9_duration = Property(
+    "Phi9_duration",
+    # "G(are_stop_signs_for_ego -> (!(~are_stop_signs_for_ego) U ((is_stopped & !(~are_stop_signs_for_ego)) | G(!(~are_stop_signs_for_ego)))))",
+    "G((~are_stop_signs_for_ego & X are_stop_signs_for_ego) -> (X(are_stop_signs_for_ego U (is_stopped | G(are_stop_signs_for_ego)))))",
+    [("are_stop_signs_for_ego", ARE_STOP_SIGNS_FOR_EGO),
+     ("is_stopped", IS_STOPPED)],
+    'True',
+    {'are_stop_signs_for_ego': [False]})
+
+timed_props = [phi1_duration,
+               phi2_duration,
+               phi3_duration,
+               phi4_S_5_duration, phi4_S_10_duration, phi4_S_15_duration,
+               phi5_duration,
+               phi6_duration,
+               phi7_T_5_duration, phi7_T_10_duration, phi7_T_15_duration,
+               phi8_T_5_duration, phi8_T_10_duration, phi8_T_15_duration,
+               phi9_duration]
 
 all_properties = [phi1, phi2, phi3, phi4_S_5, phi4_S_10, phi4_S_15, phi5, phi6, phi7_T_5, phi7_T_10, phi7_T_15,
                   phi8_T_5, phi8_T_10, phi8_T_15, phi9]
+
+all_properties.extend(timed_props)

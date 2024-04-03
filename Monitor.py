@@ -117,6 +117,12 @@ class Monitor:
             df.loc[0] = values
             df.to_csv(csv_path, index=False)
 
+    def save_final_output(self):
+        for i, prop in enumerate(self.properties):
+            save_path = self.route_path / f"violations_{prop.name}.csv"
+            violation_data = [(start, end if end > 0 else prop.time) for start, end in prop.violations]
+            df = pd.DataFrame(data=violation_data, columns=['start', 'end'])
+            df.to_csv(save_path, index=True)
 
 def main():
     # # Property 1
