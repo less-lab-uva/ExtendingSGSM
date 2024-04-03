@@ -14,3 +14,8 @@ echo Checking LAV...
 python ./check_properties.py --folder_to_check ./LAV_data/ --save_folder ./LAV_results/ --threaded &
 
 wait
+
+### Generate the tables
+echo Generating Tables...
+python generate_table.py --base_folder ./ --output_folder ./tables
+python generate_duration_table.py --base_folder ./ --output_folder ./tables
