@@ -105,7 +105,7 @@ class Property:
         for node in calc_prod.nodes():
             u, v = node
             calc_prod.nodes[node]['accepting'] = (
-                reset_dfa.nodes[u]['accepting'], orig_dfa.nodes[u]['accepting'])
+                reset_dfa.nodes[u]['accepting'], orig_dfa.nodes[v]['accepting'])
             if calc_prod.nodes[node]['accepting'][0]:
                 reset_nodes.append(v)
         reset_nodes = set(reset_nodes)
