@@ -50,7 +50,7 @@ class Property:
                                          for key, bool_list in reset_init_trace.items()}
                 # validate that the reset_init_trace can be run from the init state
                 try:
-                    ret_val = self.ltldfa.from_init(self.reset_init_trace)
+                    ret_val = self.ltldfa.from_init(self.reset_init_trace, return_state=True)
                     self.reset_state = ret_val[-1][-1]
                 except NameError:
                     raise AttributeError("reset_init_trace not valid over the DFA produced by the provided property_string")
