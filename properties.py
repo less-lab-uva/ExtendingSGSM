@@ -45,10 +45,12 @@ ARE_STOP_SIGNS_FOR_EGO = partial(
 
 EGO_IS_IN_OPPOSING_LANE = partial(P.gt, partial(
     P.size, partial(P.intersection, EGO_LANES, OPPOSING_LANES)), 0)
-phi1 = Property("Phi1", "G(~ego_is_in_opposing_lane)",
-                [("ego_is_in_opposing_lane", EGO_IS_IN_OPPOSING_LANE)])
-phi1_duration = Property("Phi1_duration", "G(~ego_is_in_opposing_lane)",
-                [("ego_is_in_opposing_lane", EGO_IS_IN_OPPOSING_LANE)],
+phi1 = Property(property_name="Phi1",
+                property_string="G(~ego_is_in_opposing_lane)",
+                predicates=[("ego_is_in_opposing_lane", EGO_IS_IN_OPPOSING_LANE)])
+phi1_duration = Property(property_name="Phi1_duration",
+                         property_string="G(~ego_is_in_opposing_lane)",
+                         predicates=[("ego_is_in_opposing_lane", EGO_IS_IN_OPPOSING_LANE)],
                          reset_string='~ego_is_in_opposing_lane')
 
 # Property 2
@@ -297,13 +299,16 @@ phi9 = Property(
      ("is_stopped", IS_STOPPED)])
 
 phi9_duration = Property(
-    "Phi9_duration",
-    # "G(are_stop_signs_for_ego -> (!(~are_stop_signs_for_ego) U ((is_stopped & !(~are_stop_signs_for_ego)) | G(!(~are_stop_signs_for_ego)))))",
-    "G((~are_stop_signs_for_ego & X are_stop_signs_for_ego) -> (X(are_stop_signs_for_ego U (is_stopped | G(are_stop_signs_for_ego)))))",
-    [("are_stop_signs_for_ego", ARE_STOP_SIGNS_FOR_EGO),
+    property_name="Phi9_duration",
+    property_string="G((~are_stop_signs_for_ego & X are_stop_signs_for_ego) -> (X(are_stop_signs_for_ego U (is_stopped | G(are_stop_signs_for_ego)))))",
+    predicates=[("are_stop_signs_for_ego", ARE_STOP_SIGNS_FOR_EGO),
      ("is_stopped", IS_STOPPED)],
-    'True',
-    {'are_stop_signs_for_ego': [False]})
+    reset_string='True',
+    reset_init_trace={'are_stop_signs_for_ego': [False]})
+
+phi9_reset_prop = Property("phi9_reset", property_string='are_stop_signs_for_ego U ((~are_stop_signs_for_ego) & (~X true))',
+                           predicates=[("are_stop_signs_for_ego", ARE_STOP_SIGNS_FOR_EGO),
+                           ("is_stopped", IS_STOPPED)])
 
 timed_props = [phi1_duration,
                phi2_duration,

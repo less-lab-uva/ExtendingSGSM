@@ -94,6 +94,8 @@ class LTLfDFA:
             # this should always be encoded as
             if all([src == dst for src, dst in self._dfa.out_edges(node)]):
                 self._trap_states.append(node)
+        if '\\n' in self._dfa:
+          self._dfa.remove_node('\\n')  # for some reason an extra node with a newline is created.
 
     def step(self, data, return_state=False):
         self._current_state = self._compute_next_state(

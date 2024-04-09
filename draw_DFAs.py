@@ -14,6 +14,9 @@ def main():
         image_file = f'{args.save_folder}/{prop.name}_dfa.svg'
         with open(image_file, 'wb') as f:
             f.write(img)
+        img = prop.ltldfa.get_pydot_image()
+        image_file = f'{args.save_folder}/{prop.name}_dfa.png'
+        img.save(image_file)
 
 
 if __name__ == '__main__':
