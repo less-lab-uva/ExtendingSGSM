@@ -304,7 +304,7 @@ phi9_duration = Property(
     predicates=[("are_stop_signs_for_ego", ARE_STOP_SIGNS_FOR_EGO),
      ("is_stopped", IS_STOPPED)],
     reset_prop='True',
-    reset_init_trace={'are_stop_signs_for_ego': [False]})
+    reset_init_trace='are_stop_signs_for_ego U (~are_stop_signs_for_ego & last)')
 
 timed_props = [phi1_duration,
                phi2_duration,

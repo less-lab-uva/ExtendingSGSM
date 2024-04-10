@@ -4,7 +4,7 @@ from typing import Dict, List, Union, Tuple, Any, Optional
 
 import sympy
 
-from LTLfDFA import LTLfDFA
+from LTLfDFA import LTLfDFA, get_pydot_image
 from functools import partial
 
 from PIL import Image
@@ -18,7 +18,7 @@ class Property:
                  property_string: str,
                  predicates: List[Tuple[str, Union[partial, Any]]],
                  reset_prop: Union[str, 'Subproperty'] = None,
-                 reset_init_trace: Union[Dict[str, List[bool]], 'Subproperty'] = None):
+                 reset_init_trace: Union[Dict[str, List[bool]], 'str'] = None):
         self.resettable = False
         self.name = property_name
         self.ltldfa = LTLfDFA(property_string)
@@ -53,10 +53,12 @@ class Property:
             raise AttributeError("reset_prop must be Subproperty or str")
         self.reset_state = None
         if reset_init_trace is not None:
-            if type(reset_init_trace) == Subproperty:
-                self.reset_init_trace = reset_init_trace
+            if type(reset_init_trace) == str:
+                self.reset_init_trace = Subproperty(self,
+                                                    property_name=f'{self.name}_reset_state_formula',
+                                                    property_string=reset_init_trace)
                 # validate that the reset_init_trace Subproperty points to exactly one state
-                reset_states = self.__compute_reset_state_from_product(reset_init_trace)
+                reset_states = self.__compute_reset_state_from_product(self.reset_init_trace)
                 if len(reset_states) != 1:
                     if len(reset_states) == 0:
                         raise AttributeError("The provided reset formula over-constrains the input. "
@@ -85,7 +87,7 @@ class Property:
         self.in_violation = False
         self.time = 0
 
-    def __compute_reset_state_from_product(self, reset_prop: 'Subproperty'):
+    def __compute_reset_state_from_product(self, reset_prop: 'Subproperty', save_product=False):
         """Computes the product of the DFA for this property with the DFA for the Subproperty."""
         assert reset_prop.is_subproperty_of(self), "The reset formula provided is not a Subproperty of this property"
         reset_dfa = copy.copy(reset_prop.ltldfa._dfa)
@@ -118,8 +120,14 @@ class Property:
         # remove nodes that have no way to get in
         done = False
         while not done:
-            remove_nodes = [node for node, indegree in dict(calc_prod.in_degree()).items() if
-                            indegree == 0 and node != ('1', '1')]
+            remove_nodes = []
+            for node in calc_prod.nodes:
+                if node == ('1', '1'):
+                    continue
+                # find all nodes that are not this node that can get you into this node
+                src_nodes = {u for (u,v) in calc_prod.in_edges(node) if u != node}
+                if len(src_nodes) == 0:
+                    remove_nodes.append(node)
             for node in remove_nodes:
                 calc_prod.remove_node(node)
             done = len(remove_nodes) == 0
@@ -127,10 +135,14 @@ class Property:
         reset_nodes = []
         for node in calc_prod.nodes():
             u, v = node
-            calc_prod.nodes[node]['accepting'] = (reset_dfa.nodes[u]['accepting'], orig_dfa.nodes[v]['accepting'])
-            if calc_prod.nodes[node]['accepting'][0]:
+            calc_prod.nodes[node]['accepting'] = reset_dfa.nodes[u]['accepting']
+            if calc_prod.nodes[node]['accepting']:
                 reset_nodes.append(v)
         reset_nodes = set(reset_nodes)
+        if save_product:
+            sg_img = get_pydot_image(calc_prod, color=False, svg=True)
+            with open(f'{self.name}_prod.svg', 'wb') as f:
+                f.write(sg_img)
         return reset_nodes
 
     def update_data(self, sg, save_usage_information=False):
