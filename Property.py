@@ -127,8 +127,7 @@ class Property:
         reset_nodes = []
         for node in calc_prod.nodes():
             u, v = node
-            calc_prod.nodes[node]['accepting'] = (
-                reset_dfa.nodes[u]['accepting'], orig_dfa.nodes[v]['accepting'])
+            calc_prod.nodes[node]['accepting'] = (reset_dfa.nodes[u]['accepting'], orig_dfa.nodes[v]['accepting'])
             if calc_prod.nodes[node]['accepting'][0]:
                 reset_nodes.append(v)
         reset_nodes = set(reset_nodes)
@@ -153,14 +152,9 @@ class Property:
         for data_dict in sg.graph[f'usage_information_{self.name}']:
             func_name = data_dict['func']  # TODO: filter only by those used in comparison expressions?
             data = data_dict['data']
-            # print(func_name, data)
             all_nodes.update(data)
         all_nodes.update([node for node in sg.nodes if node.name == 'ego'])
-        # print(all_nodes)
         graph_copy = nx.induced_subgraph(sg, all_nodes)
-        # graph_copy = copy.deepcopy(sg)
-        # graph_copy = nx.induced_subgraph(graph_copy, all_nodes)
-        # graph_copy.graph['size'] = (100, 100)
         if svg:
             img = nx.nx_pydot.to_pydot(graph_copy).create_svg()
             with open(file_name, 'wb') as f:
