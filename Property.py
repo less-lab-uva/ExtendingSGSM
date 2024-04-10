@@ -118,6 +118,7 @@ class Property:
         calc_prod.update(nodes=nodes)
         calc_prod.update(edges=edges)
         # remove nodes that have no way to get in
+        # TODO this currently does not account for disconnected cycles. In the future may need to actually check paths from init
         done = False
         while not done:
             remove_nodes = []
