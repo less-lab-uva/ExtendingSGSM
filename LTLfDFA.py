@@ -59,6 +59,7 @@ class LTLfDFA:
         self._formula = ltlf_formula
         parser = LTLfParser()
         formula = parser(self._formula)
+        self.symbols = formula.find_labels()
         self._pydot_str = formula.to_dfa()
         # the output is a list of one element
         dfa_pydot = pydot.graph_from_dot_data(self._pydot_str)[0]

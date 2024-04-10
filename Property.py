@@ -1,10 +1,10 @@
 import copy
 import itertools
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Tuple, Any, Optional
 
 import sympy
 
-from LTLfDFA import LTLfDFA, ltlf_to_python
+from LTLfDFA import LTLfDFA
 from functools import partial
 
 from PIL import Image
@@ -13,14 +13,13 @@ import networkx as nx
 
 
 class Property:
-    def __init__(self, property_name, property_string, predicates, reset_string=None,
+    def __init__(self,
+                 property_name: str,
+                 property_string: str,
+                 predicates: List[Tuple[str, Union[partial, Any]]],
+                 reset_prop: Union[str, 'Subproperty'] = None,
                  reset_init_trace: Union[Dict[str, List[bool]], 'Subproperty'] = None):
-        self.resetable = False
-        if reset_string is None:
-            # if no reset string is specified, then the DFA can't leave the trap state
-            reset_string = "False"
-        else:
-            self.resetable = True
+        self.resettable = False
         self.name = property_name
         self.ltldfa = LTLfDFA(property_string)
         self.data = {}
@@ -28,7 +27,31 @@ class Property:
         for a, b in predicates:
             self.data[a] = []
             self.predicates[a] = b
-        self.reset_string = ltlf_to_python(reset_string)
+        needed_symbols = set(self.ltldfa.symbols)
+        have_symbols = set(self.predicates.keys())
+        missing_symbols = needed_symbols - have_symbols
+        if len(missing_symbols) > 0:
+            raise AttributeError("The provided list of predicates is insufficient to evaluate the formula."
+                                 f"Found symbols: {have_symbols}, Need symbols: {needed_symbols}, "
+                                 f"Missing: {missing_symbols}")
+        # TODO add safety check that the DFA is over only the variables we have as predicates
+        if type(reset_prop) == Subproperty:
+            self.reset_prop = reset_prop
+            self.resettable = True
+        elif type(reset_prop) == str:
+            self.resettable = True
+            prop_string = f"~({reset_prop}) U ({reset_prop})"
+            self.reset_prop = Subproperty(self,
+                                          property_name=f"{self.name}_reset_prop",
+                                          property_string=prop_string)
+        elif reset_prop is None:
+            if type(self) == NeverAccepting:
+                # break the recursion
+                self.reset_prop = self
+            else:
+                self.reset_prop = NeverAccepting()
+        else:
+            raise AttributeError("reset_prop must be Subproperty or str")
         self.reset_state = None
         if reset_init_trace is not None:
             if type(reset_init_trace) == Subproperty:
@@ -53,7 +76,8 @@ class Property:
                     ret_val = self.ltldfa.from_init(self.reset_init_trace, return_state=True)
                     self.reset_state = ret_val[-1][-1]
                 except NameError:
-                    raise AttributeError("reset_init_trace not valid over the DFA produced by the provided property_string")
+                    raise AttributeError(
+                        "reset_init_trace not valid over the DFA produced by the provided property_string")
             else:
                 raise AttributeError("reset_init_trace must be type Dict[str, List[bool]] or Subproperty")
         else:
@@ -166,13 +190,11 @@ class Property:
             if not self.in_violation:
                 self.in_violation = True
                 self.violations.append([self.time, -1])
-            if eval(self.reset_string, self.get_last_predicates()):
+            if self.reset_prop.ltldfa.step(self.get_last_predicates()):
                 self.in_violation = False
                 self.violations[-1][-1] = self.time
-                dfa_trace = self.ltldfa.from_init(self.reset_init_trace, return_state=True)
-                # set the DFA state to the state it ended the reset trace in
-                state = dfa_trace[-1][-1]
-                self.ltldfa.set_state(state)
+                self.ltldfa.set_state(self.reset_state)
+                self.reset_prop.ltldfa.reset()
         if return_state:
             return acc, state
         return acc
@@ -213,11 +235,25 @@ class Subproperty(Property):
     A subproperty is another property that depends on the same predicate values as another property
     Subproperties cannot be reset.
     """
-    def __init__(self, parent: Property, property_name, property_string):
+
+    def __init__(self, parent: Optional[Property], property_name, property_string):
         if type(parent) == Subproperty:
-            raise AttributeError("Subproperty objects cannot be subproperties of other Subproperty objects")
-        super().__init__(property_name=property_name, property_string=property_string, predicates=parent.predicates)
+            raise AttributeError(f"Got {property_name} as a subproperty of {parent.name}. "
+                                 "Subproperty objects cannot be subproperties of other Subproperty objects.")
+        # This isn't the prettiest, but convert it back into the format the init func expects
+        preds = [(name, value) for name, value in parent.predicates.items()] if parent is not None else []
+        super().__init__(property_name=property_name,
+                         property_string=property_string,
+                         predicates=preds)
         self.parent = parent
 
     def is_subproperty_of(self, prop: Property) -> bool:
         return self.parent == prop
+
+
+class NeverAccepting(Subproperty):
+    def __init__(self):
+        super().__init__(None, "NeverAccepting", "False")
+
+    def is_subproperty_of(self, prop: Property) -> bool:
+        return True

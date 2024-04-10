@@ -51,7 +51,7 @@ phi1 = Property(property_name="Phi1",
 phi1_duration = Property(property_name="Phi1_duration",
                          property_string="G(~ego_is_in_opposing_lane)",
                          predicates=[("ego_is_in_opposing_lane", EGO_IS_IN_OPPOSING_LANE)],
-                         reset_string='~ego_is_in_opposing_lane')
+                         reset_prop='~ego_is_in_opposing_lane')
 
 # Property 2
 
@@ -63,7 +63,7 @@ phi2 = Property(
 phi2_duration = Property(
     "Phi2_duration", "G(~ego_is_out_of_road)",
     [("ego_is_out_of_road", EGO_IS_OUT_OF_ROAD)],
-    reset_string='~ego_is_out_of_road')
+    reset_prop='~ego_is_out_of_road')
 
 # Property 3
 
@@ -89,7 +89,7 @@ phi3_duration = Property(
     [("is_in_right_most_lane", IS_IN_RIGHT_MOST_LANE),
      ("is_in_junction", IS_IN_JUNCTION),
      ("is_not_steering_right", IS_NOT_STEERING_RIGHT)],
-    reset_string='is_not_steering_right')
+    reset_prop='is_not_steering_right')
 
 # Property 4 - S=5
 
@@ -106,7 +106,7 @@ phi4_S_5_duration = Property(
     "Phi4_S_5_duration", "G(are_entities_near_coll -> ~ego_is_faster_than_s)",
     [("are_entities_near_coll", ARE_ENTITIES_NEAR_COLL),
      ("ego_is_faster_than_s", EGO_IS_FASTER_THAN_S)],
-    reset_string='~ego_is_faster_than_s')
+    reset_prop='~ego_is_faster_than_s')
 
 # Property 4 - S=10
 
@@ -123,7 +123,7 @@ phi4_S_10_duration = Property(
     "Phi4_S_10_duration", "G(are_entities_near_coll -> ~ego_is_faster_than_s)",
     [("are_entities_near_coll", ARE_ENTITIES_NEAR_COLL),
      ("ego_is_faster_than_s", EGO_IS_FASTER_THAN_S)],
-    reset_string='~ego_is_faster_than_s')
+    reset_prop='~ego_is_faster_than_s')
 
 # Property 4 - S=15
 
@@ -140,7 +140,7 @@ phi4_S_15_duration = Property(
     "Phi4_S_15_duration", "G(are_entities_near_coll -> ~ego_is_faster_than_s)",
     [("are_entities_near_coll", ARE_ENTITIES_NEAR_COLL),
      ("ego_is_faster_than_s", EGO_IS_FASTER_THAN_S)],
-    reset_string='~ego_is_faster_than_s')
+    reset_prop='~ego_is_faster_than_s')
 
 # Property 5
 
@@ -166,7 +166,7 @@ phi5_duration = Property(
     [("are_entities_super_near", ARE_ENTITIES_SUPER_NEAR),
      ("are_entities_near_coll", ARE_ENTITIES_NEAR_COLL),
      ("is_throttle_not_positive", IS_THROTTLE_NOT_POSITIVE)],
-    reset_string="is_throttle_not_positive")
+    reset_prop="is_throttle_not_positive")
 
 # Property 6
 
@@ -189,7 +189,7 @@ phi6_duration = Property(
      ("are_red_traffic_lights_for_ego", ARE_RED_TRAFFIC_LIGHT_FOR_EGO),
      ("are_stop_signs_for_ego", ARE_STOP_SIGNS_FOR_EGO),
      ("is_stopped", IS_STOPPED)],
-    reset_string="~is_stopped")
+    reset_prop="~is_stopped")
 
 
 # Property 7 - T=5
@@ -255,7 +255,7 @@ phi8_T_5_duration = Property(
     "Phi8_T_5_duration",
     f"~ $[{T}][is_only_in_junction]",
     [("is_only_in_junction", IS_ONLY_IN_JUNCTION)],
-    reset_string="~is_only_in_junction")
+    reset_prop="~is_only_in_junction")
 
 # Property 8 - T=10
 
@@ -271,7 +271,7 @@ phi8_T_10_duration = Property(
     "Phi8_T_10_duration",
     f"~ $[{T}][is_only_in_junction]",
     [("is_only_in_junction", IS_ONLY_IN_JUNCTION)],
-    reset_string="~is_only_in_junction")
+    reset_prop="~is_only_in_junction")
 
 # Property 8 - T=15
 
@@ -287,7 +287,7 @@ phi8_T_15_duration = Property(
     "Phi8_T_15_duration",
     f"~ $[{T}][is_only_in_junction]",
     [("is_only_in_junction", IS_ONLY_IN_JUNCTION)],
-    reset_string="~is_only_in_junction")
+    reset_prop="~is_only_in_junction")
 
 # Property 9
 
@@ -303,12 +303,8 @@ phi9_duration = Property(
     property_string="G((~are_stop_signs_for_ego & X are_stop_signs_for_ego) -> (X(are_stop_signs_for_ego U (is_stopped | G(are_stop_signs_for_ego)))))",
     predicates=[("are_stop_signs_for_ego", ARE_STOP_SIGNS_FOR_EGO),
      ("is_stopped", IS_STOPPED)],
-    reset_string='True',
+    reset_prop='True',
     reset_init_trace={'are_stop_signs_for_ego': [False]})
-
-phi9_reset_prop = Property("phi9_reset", property_string='are_stop_signs_for_ego U ((~are_stop_signs_for_ego) & (~X true))',
-                           predicates=[("are_stop_signs_for_ego", ARE_STOP_SIGNS_FOR_EGO),
-                           ("is_stopped", IS_STOPPED)])
 
 timed_props = [phi1_duration,
                phi2_duration,
