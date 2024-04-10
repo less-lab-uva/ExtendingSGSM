@@ -34,7 +34,6 @@ class Property:
             raise AttributeError("The provided list of predicates is insufficient to evaluate the formula."
                                  f"Found symbols: {have_symbols}, Need symbols: {needed_symbols}, "
                                  f"Missing: {missing_symbols}")
-        # TODO add safety check that the DFA is over only the variables we have as predicates
         if type(reset_prop) == Subproperty:
             self.reset_prop = reset_prop
             self.resettable = True
