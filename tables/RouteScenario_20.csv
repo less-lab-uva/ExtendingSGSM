@@ -1,5 +1,5 @@
-SUT,Phi1,Phi2,Phi3,Phi4_S_5,Phi4_S_10,Phi4_S_15,Phi5,Phi6,Phi7_T_5,Phi7_T_10,Phi7_T_15,Phi8_T_5,Phi8_T_10,Phi8_T_15,Phi9,Total
-Interfuser,0,0,1,0,0,0,0,1,1,0,0,1,1,1,1,7.0
-TCP,1,0,1,0,0,0,0,0,0,0,0,1,0,0,1,4.0
-LAV,1,0,1,0,0,0,1,0,1,0,0,1,1,0,1,7.0
-InterfuserTCPLAV,2,0,3,0,0,0,1,1,2,0,0,3,2,1,3,18.0
+SUT,Phi1,Phi2,Phi3,Phi4_S_5,Phi4_S_10,Phi4_S_15,Phi5,Phi6,Phi7_T_5,Phi7_T_10,Phi7_T_15,Phi8_T_5,Phi8_T_10,Phi8_T_15,Phi9,Phi1_duration,Phi1_complex_reset_30,Phi1_complex_reset_60,Phi2_duration,Phi3_duration,Phi4_S_5_duration,Phi4_S_10_duration,Phi4_S_15_duration,Phi5_duration,Phi6_duration,Phi7_T_5_duration,Phi7_T_10_duration,Phi7_T_15_duration,Phi8_T_5_duration,Phi8_T_10_duration,Phi8_T_15_duration,Phi9_duration,Total
+Interfuser,0,0,1,0,0,0,0,1,1,0,0,1,1,1,1,0,0,0,0,1,0,0,0,0,1,1,0,0,1,1,1,1,14.0
+TCP,1,0,1,0,0,0,0,0,0,0,0,1,0,0,1,1,1,1,0,1,0,0,0,0,0,0,0,0,1,0,0,1,10.0
+LAV,1,0,1,0,0,0,1,0,1,0,0,1,1,0,1,1,1,1,0,1,0,0,0,1,0,1,0,0,1,1,0,1,16.0
+InterfuserTCPLAV,2,0,3,0,0,0,1,1,2,0,0,3,2,1,3,2,2,2,0,3,0,0,0,1,1,2,0,0,3,2,1,3,40.0

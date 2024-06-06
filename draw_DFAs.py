@@ -10,13 +10,12 @@ def main():
     args = parser.parse_args()
     os.makedirs(args.save_folder, exist_ok=True)
     for prop in all_properties:
-        img = prop.ltldfa.get_pydot_image(svg=True)
-        image_file = f'{args.save_folder}/{prop.name}_dfa.svg'
-        with open(image_file, 'wb') as f:
-            f.write(img)
-        img = prop.ltldfa.get_pydot_image()
-        image_file = f'{args.save_folder}/{prop.name}_dfa.png'
-        img.save(image_file)
+        for file_ending in ['svg', 'png']:
+            for color in [True, False]:
+                color_str = '_color' if color else ''
+                prop.ltldfa.save_image(f'{args.save_folder}/{prop.name}_dfa{color_str}.{file_ending}', color=color)
+                prop.reset_prop.ltldfa.save_image(f'{args.save_folder}/{prop.name}_dfa_R{color_str}.{file_ending}', color=color)
+
 
 
 if __name__ == '__main__':

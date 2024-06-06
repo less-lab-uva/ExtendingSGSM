@@ -17,7 +17,7 @@ class Property:
                  property_name: str,
                  property_string: str,
                  predicates: List[Tuple[str, Union[partial, Any]]],
-                 reset_prop: Union[str, 'Subproperty'] = None,
+                 reset_prop: Union[str, 'SubpropertyWrapper'] = None,
                  reset_init_trace: Union[Dict[str, List[bool]], 'str'] = None):
         self.resettable = False
         self.name = property_name
@@ -34,24 +34,31 @@ class Property:
             raise AttributeError("The provided list of predicates is insufficient to evaluate the formula."
                                  f"Found symbols: {have_symbols}, Need symbols: {needed_symbols}, "
                                  f"Missing: {missing_symbols}")
-        if type(reset_prop) == Subproperty:
-            self.reset_prop = reset_prop
+        self.reset_state = None
+        if reset_prop is not None:
             self.resettable = True
-        elif type(reset_prop) == str:
-            self.resettable = True
-            prop_string = f"~({reset_prop}) U ({reset_prop})"
+            prop_name = f"{self.name}_reset_prop"
+            if type(reset_prop) == SubpropertyWrapper:
+                prop_string = reset_prop.property_string
+            elif type(reset_prop) == str:
+                # check if the provided prop is already in LTL?
+                # TODO this is equivalent to F (reset_prop)??????
+                prop_string = f"~({reset_prop}) U ({reset_prop})"
+            else:
+                raise AttributeError('The provided reset_prop must be either a string or a SubpropertyWrapper')
             self.reset_prop = Subproperty(self,
-                                          property_name=f"{self.name}_reset_prop",
+                                          property_name=prop_name,
                                           property_string=prop_string)
-        elif reset_prop is None:
+            # if we have a way of resetting then we must have a reset state
+            # the default reset state is the init state
+            # if the user provided a reset state, then that will be set below
+            self.reset_state = self.ltldfa.get_init_state()
+        else:
             if type(self) == NeverAccepting:
                 # break the recursion
                 self.reset_prop = self
             else:
                 self.reset_prop = NeverAccepting()
-        else:
-            raise AttributeError("reset_prop must be Subproperty or str")
-        self.reset_state = None
         if reset_init_trace is not None:
             if type(reset_init_trace) == str:
                 self.reset_init_trace = Subproperty(self,
@@ -255,6 +262,11 @@ class Subproperty(Property):
 
     def is_subproperty_of(self, prop: Property) -> bool:
         return self.parent == prop
+
+
+class SubpropertyWrapper:
+    def __init__(self, property_string: str):
+        self.property_string = property_string
 
 
 class NeverAccepting(Subproperty):

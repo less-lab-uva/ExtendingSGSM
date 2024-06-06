@@ -1,4 +1,5 @@
 import copy
+import time
 
 import pydot
 import networkx as nx
@@ -50,6 +51,38 @@ def ltlf_to_python(ltl_predicate):
     ltl_predicate = ltl_predicate.replace("true", "True")  # Python True casing
     return ltl_predicate
 
+def get_pydot_image(dfa, cur_node=None, color=True, svg=False):
+    graph_copy = copy.deepcopy(dfa)
+    graph_copy.graph['size'] = (100, 100)
+    for node in graph_copy.nodes:
+        node_props = graph_copy.nodes[node]
+        # del node_props['accepting']
+        node_props['height'] = 2.5
+        node_props['fontsize'] = 50
+        node_props['fontname'] = 'times bold'
+        if color:
+            if node == 'init' or node == '\\n':
+                node_color = 'invis'
+            else:
+                node_color = 'green' if graph_copy.nodes[node]['accepting'] else 'red'
+            node_props['shape'] = 'circle'
+            node_props['color'] = 'black' if cur_node == node else node_color
+            node_props['penwidth'] = 20 if cur_node == node else 3
+            node_props['fillcolor'] = node_color
+            node_props['style'] = 'filled'
+        else:
+            node_props['shape'] = 'doublecircle' if graph_copy.nodes[node]['accepting'] else 'circle'
+            if node == 'init':
+                node_props['fillcolor'] = 'invis'
+                node_props['style'] = 'invis'
+            else:
+                node_props['fillcolor'] = 'grey80' if node == cur_node else 'white'
+                node_props['style'] = 'filled'
+    if svg:
+        return nx.nx_pydot.to_pydot(graph_copy).create_svg()
+    else:
+        sg_img = nx.nx_pydot.to_pydot(graph_copy).create_png()
+        return Image.open(BytesIO(sg_img))
 
 class LTLfDFA:
     ACCEPTING_PREFIX = " node [shape = doublecircle];"
@@ -57,6 +90,8 @@ class LTLfDFA:
     def __init__(self, ltlf_formula):
         ltlf_formula = parse_mtlf_to_ltlf(ltlf_formula)
         self._formula = ltlf_formula
+        # print('Parsing formula', ltlf_formula)
+        # time.sleep(1)
         parser = LTLfParser()
         formula = parser(self._formula)
         self.symbols = formula.find_labels()
@@ -116,6 +151,9 @@ class LTLfDFA:
                 f"Unable to find state transition from {u} with {data_dict}, aborting.")
         return valid_states[0]
 
+    def get_init_state(self):
+        return self._init_state
+
     def from_init(self, data: Dict[str, List[Tuple[int, bool]]], return_state=False):
         current_state = self._init_state
         if data is None:
@@ -147,37 +185,7 @@ class LTLfDFA:
             sg_img.save(file_name)
 
     def get_pydot_image(self, cur_node=None, color=True, svg=False):
-        graph_copy = copy.deepcopy(self._dfa)
-        graph_copy.graph['size'] = (100, 100)
-        for node in graph_copy.nodes:
-            node_props = graph_copy.nodes[node]
-            del node_props['accepting']
-            node_props['height'] = 2.5
-            node_props['fontsize'] = 50
-            node_props['fontname'] = 'times bold'
-            if color:
-                if node == 'init' or node == '\\n':
-                    node_color = 'invis'
-                else:
-                    node_color = 'green' if self._dfa.nodes[node]['accepting'] else 'red'
-                node_props['shape'] = 'circle'
-                node_props['color'] = 'black' if cur_node == node else node_color
-                node_props['penwidth'] = 20 if cur_node == node else 3
-                node_props['fillcolor'] = node_color
-                node_props['style'] = 'filled'
-            else:
-                node_props['shape'] = 'doublecircle' if self._dfa.nodes[node]['accepting'] else 'circle'
-                if node == 'init':
-                    node_props['fillcolor'] = 'invis'
-                    node_props['style'] = 'invis'
-                else:
-                    node_props['fillcolor'] = 'grey80' if node == cur_node else 'white'
-                    node_props['style'] = 'filled'
-        if svg:
-            return nx.nx_pydot.to_pydot(graph_copy).create_svg()
-        else:
-            sg_img = nx.nx_pydot.to_pydot(graph_copy).create_png()
-            return Image.open(BytesIO(sg_img))
+        return get_pydot_image(self._dfa, cur_node, color, svg)
 
     def is_trap_state(self, state):
         return state in self._trap_states

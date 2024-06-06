@@ -31,7 +31,7 @@ def main():
             properties_path = args.base_folder / f"{sut}_results/done_RouteScenario_{route}/"
             if properties_path.exists():
                 for file in properties_path.iterdir():
-                    if file.name.endswith(".csv"):
+                    if file.name.endswith(".csv") and not 'violations_' in file.name:
                         name = file.name.split(".csv")[0]
                         df = pd.read_csv(file)
                         q = df[df['prop_eval'] == False]

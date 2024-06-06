@@ -1,5 +1,5 @@
 import SG_Primitives as P
-from Property import Property
+from Property import Property, SubpropertyWrapper
 from functools import partial
 
 # Set predicates
@@ -53,6 +53,35 @@ phi1_duration = Property(property_name="Phi1_duration",
                          predicates=[("ego_is_in_opposing_lane", EGO_IS_IN_OPPOSING_LANE)],
                          reset_prop='~ego_is_in_opposing_lane')
 
+phi1_complex_reset_2 = Property(
+    "Phi1_complex_reset_2", "G(~ego_is_in_opposing_lane)",
+    [("ego_is_in_opposing_lane", EGO_IS_IN_OPPOSING_LANE)],
+    reset_prop=SubpropertyWrapper('$[2][~ego_is_in_opposing_lane]'))
+
+phi1_complex_reset_10 = Property(
+    "Phi1_complex_reset_10", "G(~ego_is_in_opposing_lane)",
+    [("ego_is_in_opposing_lane", EGO_IS_IN_OPPOSING_LANE)],
+    reset_prop=SubpropertyWrapper('$[10][~ego_is_in_opposing_lane]'))
+
+phi1_complex_reset_20 = Property(
+    "Phi1_complex_reset_20", "G(~ego_is_in_opposing_lane)",
+    [("ego_is_in_opposing_lane", EGO_IS_IN_OPPOSING_LANE)],
+    reset_prop=SubpropertyWrapper('$[20][~ego_is_in_opposing_lane]'))
+
+# import resource, sys
+# # resource.setrlimit(resource.RLIMIT_STACK, (2**29,-1))
+# sys.setrecursionlimit(10**6)
+
+phi1_complex_reset_30 = Property(
+    "Phi1_complex_reset_30", "G(~ego_is_in_opposing_lane)",
+    [("ego_is_in_opposing_lane", EGO_IS_IN_OPPOSING_LANE)],
+    reset_prop=SubpropertyWrapper('$[30][~ego_is_in_opposing_lane]'))
+
+phi1_complex_reset_60 = Property(
+    "Phi1_complex_reset_60", "G(~ego_is_in_opposing_lane)",
+    [("ego_is_in_opposing_lane", EGO_IS_IN_OPPOSING_LANE)],
+    reset_prop=SubpropertyWrapper('$[60][~ego_is_in_opposing_lane]'))
+
 # Property 2
 
 EGO_IS_OUT_OF_ROAD = partial(P.gt, partial(P.size, partial(
@@ -64,6 +93,23 @@ phi2_duration = Property(
     "Phi2_duration", "G(~ego_is_out_of_road)",
     [("ego_is_out_of_road", EGO_IS_OUT_OF_ROAD)],
     reset_prop='~ego_is_out_of_road')
+
+
+
+phi2_complex_reset_2 = Property(
+    "Phi2_complex_reset_2", "G(~ego_is_out_of_road)",
+    [("ego_is_out_of_road", EGO_IS_OUT_OF_ROAD)],
+    reset_prop=SubpropertyWrapper('F$[2][~ego_is_out_of_road]'))
+
+phi2_complex_reset_10 = Property(
+    "Phi2_complex_reset_10", "G(~ego_is_out_of_road)",
+    [("ego_is_out_of_road", EGO_IS_OUT_OF_ROAD)],
+    reset_prop=SubpropertyWrapper('F$[10][~ego_is_out_of_road]'))
+
+phi2_complex_reset_20 = Property(
+    "Phi2_complex_reset_20", "G(~ego_is_out_of_road)",
+    [("ego_is_out_of_road", EGO_IS_OUT_OF_ROAD)],
+    reset_prop=SubpropertyWrapper('F$[20][~ego_is_out_of_road]'))
 
 # Property 3
 
@@ -106,7 +152,8 @@ phi4_S_5_duration = Property(
     "Phi4_S_5_duration", "G(are_entities_near_coll -> ~ego_is_faster_than_s)",
     [("are_entities_near_coll", ARE_ENTITIES_NEAR_COLL),
      ("ego_is_faster_than_s", EGO_IS_FASTER_THAN_S)],
-    reset_prop='~ego_is_faster_than_s')
+    # reset_prop='~ego_is_faster_than_s')
+      reset_prop='~(are_entities_near_coll -> ~ego_is_faster_than_s)')
 
 # Property 4 - S=10
 
@@ -307,14 +354,25 @@ phi9_duration = Property(
     reset_init_trace='are_stop_signs_for_ego U (~are_stop_signs_for_ego & last)')
 
 timed_props = [phi1_duration,
+               # phi1_complex_reset_2,
+               # phi1_complex_reset_10,
+               # phi1_complex_reset_20,
+               phi1_complex_reset_30,
+               phi1_complex_reset_60,
+
                phi2_duration,
+               # phi2_complex_reset_2,
+               # phi2_complex_reset_10,
+               # phi2_complex_reset_20,
+
                phi3_duration,
                phi4_S_5_duration, phi4_S_10_duration, phi4_S_15_duration,
                phi5_duration,
                phi6_duration,
                phi7_T_5_duration, phi7_T_10_duration, phi7_T_15_duration,
                phi8_T_5_duration, phi8_T_10_duration, phi8_T_15_duration,
-               phi9_duration]
+               phi9_duration,
+               ]
 
 all_properties = [phi1, phi2, phi3, phi4_S_5, phi4_S_10, phi4_S_15, phi5, phi6, phi7_T_5, phi7_T_10, phi7_T_15,
                   phi8_T_5, phi8_T_10, phi8_T_15, phi9]
