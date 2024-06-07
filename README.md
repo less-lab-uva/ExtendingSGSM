@@ -1,6 +1,9 @@
-# Scene Graph Safety Monitoring (SGSM)
+# Extending Scene Graph Safety Monitoring (SGSM++)
 
-This repository contains the code for the paper "Specifying and Monitoring Safe Driving Properties with Scene Graphs". The code is written in Python and requires [conda](https://docs.anaconda.com/free/anaconda/install/linux/) and [7z](https://www.7-zip.org/download.html) to be installed. The code was tested using Ubuntu 20.04.
+This repository contains the code for the paper "The SGSM Framework: Enabling the Specification and Monitor Synthesis of Safe Driving Properties through Scene Graphs".
+This repository extends the work of [SGSM](https://github.com/less-lab-uva/SGSM); the original manuscript of the conference paper from the initial SGSM work is available [in this repository](https://github.com/less-lab-uva/ExtendingSGSM/blob/master/ICRA24_Specifying_and_Monitoring_with_Scene_Graphs.pdf).
+
+The code is written in Python and requires [conda](https://docs.anaconda.com/free/anaconda/install/linux/) and [7z](https://www.7-zip.org/download.html) to be installed. The code was tested using Ubuntu 20.04.
 
 ## Installation
 To install everything needed to run the code, execute the following command:
