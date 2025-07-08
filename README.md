@@ -1,3 +1,6 @@
+> [!IMPORTANT]  
+> This repository is under MIT License, but heavily relies on [LTLf2DFA](https://github.com/whitemech/LTLf2DFA) which is under LGPL-3.0 license, and [MONA](https://github.com/cs-au-dk/MONA) which is under GPL-2.0 license.
+
 # Extending Scene Graph Safety Monitoring (SGSM++)
 
 This repository contains the code for the paper "The SGSM Framework: Enabling the Specification and Monitor Synthesis of Safe Driving Properties through Scene Graphs".
